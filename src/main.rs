@@ -4,40 +4,20 @@ use csv::{Reader, WriterBuilder};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::error::Error;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize_repr, Deserialize_repr)]
+#[repr(u32)]
 enum Role {
-    Admin,
-    Teacher,
-    Student,
+    Admin = 0,
+    Teacher = 1,
+    Student = 2,
 }
 
 impl Default for Role {
     fn default() -> Self {
         Student
-    }
-}
-
-impl TryFrom<i32> for Role {
-    type Error = &'static str;
-    fn try_from(value: i32) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Admin),
-            1 => Ok(Teacher),
-            2 => Ok(Student),
-            _ => Err("Don't recognize the role"),
-        }
-    }
-}
-
-impl Into<i32> for Role {
-    fn into(self) -> i32 {
-        match self {
-            Admin => 0,
-            Teacher => 1,
-            Student => 2,
-        }
     }
 }
 
@@ -52,13 +32,16 @@ struct Args {
 struct Record {
     email: String,
     username: String,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     password: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     displayedName: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     role: Option<Role>,
 }
 
 fn random_password() -> String {
-     thread_rng()
+    thread_rng()
         .sample_iter(&Alphanumeric)
         .take(10)
         .map(char::from)
